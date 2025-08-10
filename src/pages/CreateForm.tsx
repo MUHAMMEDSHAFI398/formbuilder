@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import {
   Button,
@@ -34,6 +32,7 @@ interface FormField {
   label: string;
   required: boolean;
   defaultValue?: string;
+  options?: string; // for select & radio
   minLength?: number;
   maxLength?: number;
   isEmail?: boolean;
@@ -100,7 +99,7 @@ export default function CreateForm() {
     console.log("Form saved:", formData);
     toast.success("Form saved successfully!");
     setIsDialogOpen(false);
-    setFields([])
+    setFields([]);
     setFormName("");
   };
 
@@ -159,15 +158,48 @@ export default function CreateForm() {
                         size="small"
                       />
 
-                      {/* Default Value */}
-                      <TextField
-                        label="Default"
-                        value={field.defaultValue}
-                        onChange={(e) =>
-                          updateField(field.id, "defaultValue", e.target.value)
-                        }
-                        size="small"
-                      />
+                      {/* Field-specific input */}
+                      {field.type === "text" ||
+                      field.type === "textarea" ||
+                      field.type === "number" ? (
+                        <TextField
+                          label="Default"
+                          value={field.defaultValue}
+                          onChange={(e) =>
+                            updateField(
+                              field.id,
+                              "defaultValue",
+                              e.target.value
+                            )
+                          }
+                          size="small"
+                        />
+                      ) : field.type === "select" || field.type === "radio" ? (
+                        <TextField
+                          label="Options (comma separated)"
+                          value={field.options || ""}
+                          onChange={(e) =>
+                            updateField(field.id, "options", e.target.value)
+                          }
+                          size="small"
+                          placeholder="Option 1, Option 2, Option 3"
+                        />
+                      ) : field.type === "date" ? (
+                        <TextField
+                          label="Default Date"
+                          type="date"
+                          value={field.defaultValue || ""}
+                          onChange={(e) =>
+                            updateField(
+                              field.id,
+                              "defaultValue",
+                              e.target.value
+                            )
+                          }
+                          size="small"
+                          InputLabelProps={{ shrink: true }}
+                        />
+                      ) : null}
 
                       {/* Required */}
                       <FormControlLabel
@@ -182,6 +214,7 @@ export default function CreateForm() {
                         label="Required"
                       />
 
+                      {/* Extra validation for text/textarea */}
                       {(field.type === "text" || field.type === "textarea") && (
                         <>
                           <TextField

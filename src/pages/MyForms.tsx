@@ -34,7 +34,7 @@ export default function MyForms() {
   return (
     <>
       <Typography variant="h4" gutterBottom>
-        My Forms
+        {forms.length ? "My Forms" : "You don't have any form"}
       </Typography>
 
       <div
