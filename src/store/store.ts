@@ -1,10 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit';
-import formReducer from './formSlice';
 import previewReducer from './previewSlice'
 
 export const store = configureStore({
   reducer: {
-    form: formReducer,
     preview: previewReducer
   }
 });
