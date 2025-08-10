@@ -36,6 +36,15 @@ export default function MyForms() {
       <Typography variant="h4" gutterBottom>
         {forms.length ? "My Forms" : "You don't have any form"}
       </Typography>
+       {!forms.length && (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => navigate("/create")}
+        >
+          Create Form
+        </Button>
+      )}
 
       <div
         style={{

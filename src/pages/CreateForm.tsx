@@ -96,7 +96,6 @@ export default function CreateForm() {
 
     localStorage.setItem("forms", JSON.stringify(storedForms));
 
-    console.log("Form saved:", formData);
     toast.success("Form saved successfully!");
     setIsDialogOpen(false);
     setFields([]);
