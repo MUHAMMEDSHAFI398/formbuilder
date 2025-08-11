@@ -1,12 +1,22 @@
-import { Typography, Paper, Box, TextField, Button, MenuItem, RadioGroup, FormControlLabel, Radio } from "@mui/material";
+import {
+  Typography,
+  Paper,
+  Box,
+  TextField,
+  Button,
+  MenuItem,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+} from "@mui/material";
 import { useSelector } from "react-redux";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 export default function PreviewForm() {
   const form = useSelector((state: any) => state?.preview);
   const [formData, setFormData] = useState<{ [key: string]: any }>({});
-
-  console.log(form)
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   if (!form) {
     return <Typography>No form selected</Typography>;
@@ -17,11 +27,59 @@ export default function PreviewForm() {
       ...prev,
       [id]: value,
     }));
+
+    // Clear error as user types
+    setErrors((prev) => ({
+      ...prev,
+      [id]: "",
+    }));
+  };
+
+  const validate = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    form.previewForm.fields.forEach((field: any) => {
+      const value = formData[field.id];
+
+      // 1. Required validation
+      if (field.required && (value === undefined || value === "" || value === false)) {
+        newErrors[field.id] = `${field.label} is required`;
+        return; // skip other checks if required fails
+      }
+
+      // 2. MinLength & MaxLength (only for text & textarea)
+      if ((field.type === "text" || field.type === "textarea") && typeof value === "string") {
+        if (field.minLength && value.length < field.minLength) {
+          newErrors[field.id] = `${field.label} must be at least ${field.minLength} characters`;
+        }
+        if (field.maxLength && value.length > field.maxLength) {
+          newErrors[field.id] = `${field.label} must be at most ${field.maxLength} characters`;
+        }
+      }
+
+      // 3. Email format check (only if isEmail = true)
+      if (
+        (field.type === "text" || field.type === "textarea") &&
+        field.isEmail &&
+        value
+      ) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          newErrors[field.id] = `${field.label} must be a valid email`;
+        }
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = () => {
-    console.log("Submission:", formData);
-    // Save to localStorage or send to API here
+    if (validate()) {
+      console.log("Submission:", formData);
+      toast.success("Form saved successfully!");
+      setFormData({});
+    }
   };
 
   return (
@@ -65,7 +123,6 @@ export default function PreviewForm() {
 
         {form.previewForm.fields.map((field: any) => (
           <Box key={field.id} sx={{ mb: 2 }}>
-            {/* Text & Textarea */}
             {(field.type === "text" || field.type === "textarea") && (
               <TextField
                 label={field.label}
@@ -74,10 +131,11 @@ export default function PreviewForm() {
                 multiline={field.type === "textarea"}
                 value={formData[field.id] || ""}
                 onChange={(e) => handleChange(field.id, e.target.value)}
+                error={!!errors[field.id]}
+                helperText={errors[field.id]}
               />
             )}
 
-            {/* Number */}
             {field.type === "number" && (
               <TextField
                 label={field.label}
@@ -86,10 +144,11 @@ export default function PreviewForm() {
                 required={field.required}
                 value={formData[field.id] || ""}
                 onChange={(e) => handleChange(field.id, e.target.value)}
+                error={!!errors[field.id]}
+                helperText={errors[field.id]}
               />
             )}
 
-            {/* Date */}
             {field.type === "date" && (
               <TextField
                 label={field.label}
@@ -99,10 +158,11 @@ export default function PreviewForm() {
                 InputLabelProps={{ shrink: true }}
                 value={formData[field.id] || ""}
                 onChange={(e) => handleChange(field.id, e.target.value)}
+                error={!!errors[field.id]}
+                helperText={errors[field.id]}
               />
             )}
 
-            {/* Checkbox */}
             {field.type === "checkbox" && (
               <FormControlLabel
                 control={
@@ -116,7 +176,6 @@ export default function PreviewForm() {
               />
             )}
 
-            {/* Select */}
             {field.type === "select" && (
               <TextField
                 select
@@ -125,29 +184,34 @@ export default function PreviewForm() {
                 required={field.required}
                 value={formData[field.id] || ""}
                 onChange={(e) => handleChange(field.id, e.target.value)}
+                error={!!errors[field.id]}
+                helperText={errors[field.id]}
               >
-                {field?.options?.split(",").map((option: string, index: number) => (
-                  <MenuItem key={index} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
+                {field?.options
+                  ?.split(",")
+                  .map((option: string, index: number) => (
+                    <MenuItem key={index} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
               </TextField>
             )}
 
-            {/* Radio */}
             {field.type === "radio" && (
               <RadioGroup
                 value={formData[field.id] || ""}
                 onChange={(e) => handleChange(field.id, e.target.value)}
               >
-                {field?.options?.split(",").map((option: string, index: number) => (
-                  <FormControlLabel
-                    key={index}
-                    value={option}
-                    control={<Radio />}
-                    label={option}
-                  />
-                ))}
+                {field?.options
+                  ?.split(",")
+                  .map((option: string, index: number) => (
+                    <FormControlLabel
+                      key={index}
+                      value={option}
+                      control={<Radio />}
+                      label={option}
+                    />
+                  ))}
               </RadioGroup>
             )}
           </Box>
